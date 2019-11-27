@@ -27,5 +27,5 @@ app.disable("x-powered-by");
 // Server listening
 app.listen(5000, (err) => {
   if (err) return console.log(err);
-  console.log("Server is up and running on http://localhost:3000");
+  console.log("Server is up and running on http://localhost:5000");
 })
