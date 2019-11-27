@@ -8,8 +8,9 @@ const MarkdownIt = require("markdown-it");
 const mdAnchor = require("markdown-it-anchor");
 const mdToc = require("markdown-it-table-of-contents");
 const mdPath = path.join(__dirname, "..", "/public/", "markdown.md");
+const mdNewPath = path.join(__dirname, "..", "/public/", "markdownNew.md");
 
-// markdown-it init and adding packages
+// markdown-it & plugins
 const md = new MarkdownIt();
 md.use(mdAnchor);
 md.use(mdToc);
@@ -37,6 +38,16 @@ router.get("/raw", async (req, res) => {
   }
 });
 
-// router.post("/", async (req, res) => {});
+router.post("/", async (req, res) => {
+  try {
+    const data = await fs.writeFile(mdPath, req.body.mdData);
+    res.send("ok");
+  } catch (err) {
+    console.log(err);
+    console.log("JOW");
+    res.status(400);
+    process.exit();
+  }
+});
 
 module.exports = router;
