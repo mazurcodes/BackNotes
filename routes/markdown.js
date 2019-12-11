@@ -15,6 +15,17 @@ const md = new MarkdownIt();
 md.use(mdAnchor);
 md.use(mdToc);
 
+// router.get("/", async (req, res) => {
+//   try {
+//     const mdData = await fs.readFile(mdPath, "utf-8");
+//     res.send(mdData);
+//   } catch (err) {
+//     console.log(err);
+//     res.status(400);
+//     process.exit();
+//   }
+// });
+
 router.get("/", async (req, res) => {
   try {
     const mdData = await fs.readFile(mdPath, "utf-8");
@@ -26,6 +37,7 @@ router.get("/", async (req, res) => {
     process.exit();
   }
 });
+
 
 router.get("/raw", async (req, res) => {
   try {
@@ -41,10 +53,9 @@ router.get("/raw", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const data = await fs.writeFile(mdPath, req.body.mdData);
-    res.send("ok");
+    res.status(200).send("ok");
   } catch (err) {
     console.log(err);
-    console.log("JOW");
     res.status(400);
     process.exit();
   }
