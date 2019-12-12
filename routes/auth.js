@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const User = require("../models/user.js");
 const auth = require("../middleware/auth");
 
@@ -21,19 +23,38 @@ router.get('/', auth, async (req, res) => {
 
 // login path
 
-// router.post('/', async (req, res) => {
-//   const {email, password} = req.body;
+router.post('/', async (req, res) => {
+  const {email, password} = req.body;
 
-//   try {
-//     // find user with email
-//     const foundUser = User.findOne({email});
+  try {
+    // find user with email
+    const foundUser = await User.findOne({email});
 
-//     // checking password with bcrypt
+    // payload for jwt
+    const payload = {
+      user: {
+        id: foundUser.id
+      }
+    };
+    // jwt creating token
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: 36000
+    });
 
-//   } catch (err){
-//     console.log(err);
-//     res.json({error: "Server error"})
-// }
-// })
+    // checking password with bcrypt
+    const passwordValid = await bcrypt.compare(password, foundUser.password);
+
+    // sending token
+    if (passwordValid) {
+      res.status(200).json({token})
+    } else {
+      res.status(400).json({error: "Invalid password"})
+    }
+
+  } catch (err){
+    console.log(err);
+    res.json({error: "Server error"})
+}
+})
 
 module.exports = router;
