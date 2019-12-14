@@ -5,7 +5,9 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user.js");
 const auth = require("../middleware/auth");
 
-// get user with AUTH middleware
+// @route     GET /auth
+// @desc      Get user id from token / search user in DB
+// @access    Private
 
 router.get('/', auth, async (req, res) => {
   console.log(req.user.id);
@@ -20,8 +22,9 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-
-// login path
+// @route     POST /auth
+// @desc      Login user and send new token
+// @access    Public
 
 router.post('/', async (req, res) => {
   const {email, password} = req.body;
@@ -29,6 +32,7 @@ router.post('/', async (req, res) => {
   try {
     // find user with email
     const foundUser = await User.findOne({email});
+    if (!foundUser) return res.status(400).json({error: "Invalid email"})
 
     // payload for jwt
     const payload = {

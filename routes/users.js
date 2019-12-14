@@ -4,6 +4,10 @@ const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+// @route     POST /users
+// @desc      Register new user
+// @access    Public
+
 router.post("/", async (req, res) => {
   const { name, email, password } = req.body;
   try {
