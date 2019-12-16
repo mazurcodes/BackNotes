@@ -1,36 +1,18 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const fs = require("fs").promises;
-const path = require("path");
+const auth = require('../middleware/auth');
+const Markdown = require('../models/markdown');
 
-// markdown-it packages
-const MarkdownIt = require("markdown-it");
-const mdAnchor = require("markdown-it-anchor");
-const mdToc = require("markdown-it-table-of-contents");
-const mdPath = path.join(__dirname, "..", "/public/", "markdown.md");
-const mdNewPath = path.join(__dirname, "..", "/public/", "markdownNew.md");
+// @route     GET /markdown
+// @desc      Get all user files from DB
+// @access    Private
 
-// markdown-it & plugins
-const md = new MarkdownIt();
-md.use(mdAnchor);
-md.use(mdToc);
-
-// router.get("/", async (req, res) => {
-//   try {
-//     const mdData = await fs.readFile(mdPath, "utf-8");
-//     res.send(mdData);
-//   } catch (err) {
-//     console.log(err);
-//     res.status(400);
-//     process.exit();
-//   }
-// });
-
-router.get("/", async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
-    const mdData = await fs.readFile(mdPath, "utf-8");
-    const mdResult = md.render(mdData);
-    res.send(mdResult);
+    const foundDocuments = await Markdown.find({ user: req.user.id })
+      .sort({ date: -1 })
+      .select('-__v -user -text');
+    res.status(200).json(foundDocuments);
   } catch (err) {
     console.log(err);
     res.status(400);
@@ -38,11 +20,21 @@ router.get("/", async (req, res) => {
   }
 });
 
+// @route     GET /markdown
+// @desc      Get user file with :id from DB
+// @access    Private
 
-router.get("/raw", async (req, res) => {
+router.get('/:id', auth, async (req, res) => {
   try {
-    const mdData = await fs.readFile(mdPath, "utf-8");
-    res.send(mdData);
+    // check if curret user is the owner of the file
+    const foundDocument = await Markdown.findById(req.params.id);
+    if (!foundDocument)
+      return res.status(401).json({ error: 'No documents found' });
+    if (foundDocument.user.toString() !== req.user.id)
+      return res.status(401).json({ error: 'Not authorized' });
+
+    // if yes then send document
+    res.status(200).json(foundDocument);
   } catch (err) {
     console.log(err);
     res.status(400);
@@ -50,10 +42,82 @@ router.get("/raw", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+// @route     POST /markdown
+// @desc      Post user markdwon file to DB and return new file's id
+// @access    Private
+
+router.post('/', auth, async (req, res) => {
+  const { name, text } = req.body;
   try {
-    const data = await fs.writeFile(mdPath, req.body.mdData);
-    res.status(200).send("ok");
+    const newMD = new Markdown({
+      user: req.user.id,
+      name,
+      text
+    });
+    await newMD.save();
+    res.status(200).json(newMD.id);
+  } catch (err) {
+    console.log(err);
+    res.status(400);
+    process.exit();
+  }
+});
+
+// @route     PUT /markdown
+// @desc      Modify users markdown file
+// @access    Private
+
+router.put('/:id', auth, async (req, res) => {
+  const id = req.params.id;
+  const userId = req.user.id;
+  const { name, text } = req.body;
+
+  const updateFields = {};
+  if (name) updateFields.name = name;
+  if (text) updateFields.text = text;
+
+  try {
+    // check if current user is the owner of the markdown file
+    const mdFile = await Markdown.findById(id);
+    if (!mdFile)
+      return res.status(401).json({ error: 'No documents found' });
+    if (mdFile.user.toString() !== userId)
+      return res.status(401).json({ error: 'Not authorized' });
+
+    // if yes then update
+    const modMD = await Markdown.findByIdAndUpdate(
+      id,
+      { $set: updateFields },
+      { new: true }
+    );
+
+    res.status(200).send('updated');
+  } catch (err) {
+    console.log(err);
+    res.status(400);
+    process.exit();
+  }
+});
+
+// @route     DELETE /markdown
+// @desc      Delete user markdown from DB
+// @access    Private
+
+router.delete('/:id', auth, async (req, res) => {
+  const id = req.params.id;
+  const userId = req.user.id;
+
+  try {
+    // check if current user is the owner of the file
+    const mdFile = await Markdown.findById(id);
+    if (!mdFile)
+      return res.status(401).json({ error: 'No documents found' });
+    if (mdFile.user.toString() !== userId)
+      return res.status(401).json({ error: 'Not authorized' });
+
+    //if yes then delete
+    const delMd = await Markdown.findByIdAndDelete(id);
+    res.status(200).send('deleted');
   } catch (err) {
     console.log(err);
     res.status(400);
