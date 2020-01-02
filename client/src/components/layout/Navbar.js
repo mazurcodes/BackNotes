@@ -1,9 +1,12 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext } from "react";
 import MdContext from "../../context/md/MdContext";
+import AuthContext from "../../context/auth/AuthContext";
 
 const Navbar = () => {
   const mdContext = useContext(MdContext);
   const { saveStatus } = mdContext;
+
+  const {user} = useContext(AuthContext);
 
   const linkStyle = {
     display: "flex",
@@ -19,6 +22,9 @@ const Navbar = () => {
         {saveStatus === "saving"
           ? `Saving...`
           : "Saved successfully"}
+      </p>
+      <p>
+        {user ? user.name : ""}
       </p>
     </div>
   );

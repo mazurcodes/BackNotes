@@ -5,6 +5,7 @@ import AuthState from './context/auth/AuthState';
 import Navbar from './components/layout/Navbar';
 import Home from './components/pages/Home';
 import Register from './components/auth/Register';
+import Login from './components/auth/Login';
 
 const mainAppStyle = {
   display: 'flex',
@@ -23,6 +24,7 @@ const App = () => {
             <Switch>
               <Route exact path="/" component={Home}  />
               <Route exact path="/register" component={Register}  />
+              <Route exact path="/login" component={Login}  />
             </Switch>
           </div>
         </Router>

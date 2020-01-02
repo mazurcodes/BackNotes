@@ -1,19 +1,20 @@
-import React, { useReducer } from "react";
-import MdContext from "./MdContext";
-import mdReducer from "./mdReducer";
+import React, { useReducer } from 'react';
+import MdContext from './MdContext';
+import mdReducer from './mdReducer';
 import {
-  GET_RAW,
+  GET_MD_LIST,
+  GET_MD,
   LOADING,
   RENDER_MD,
   SAVE_MD,
   SET_TIMEOUT,
   SET_SAVE_STATUS
-} from "../types";
+} from '../types';
 
 // Markdown-It module
-import MarkdownIt from "markdown-it";
-import mdAnchor from "markdown-it-anchor";
-import mdToc from "markdown-it-table-of-contents";
+import MarkdownIt from 'markdown-it';
+import mdAnchor from 'markdown-it-anchor';
+import mdToc from 'markdown-it-table-of-contents';
 const mdIt = new MarkdownIt();
 mdIt.use(mdAnchor);
 mdIt.use(mdToc);
@@ -21,8 +22,9 @@ mdIt.use(mdToc);
 
 const MdState = props => {
   const initialState = {
-    mdRendered: null,
+    mdList: [],
     mdRaw: null,
+    mdRendered: null,
     loading: false,
     saveStatus: null,
     timeoutIndex: 1
@@ -30,37 +32,60 @@ const MdState = props => {
 
   const [md, dispatch] = useReducer(mdReducer, initialState);
 
-  // const getMarkdown = async () => {
-  //   setLoading();
-  //   const mdData = await fetch("/markdown");
-  //   const mdResult = await mdData.text();
-  //   dispatch({
-  //     type: GET_MD,
-  //     payload: mdResult
-  //   });
-  // };
+  // @route     GET /markdown
+  // @desc      Get list of all user files from DB
+  // @access    Private
 
-  const getRawMarkdown = async () => {
+  const getMdList = async () => {
     setLoading();
-    const mdRawData = await fetch("/markdown/raw");
-    const mdRawResult = await mdRawData.text();
-    dispatch({
-      type: GET_RAW,
-      payload: mdRawResult
+    const mdData = await fetch('/markdown', {
+      method: 'GET',
+      headers: { 'x-auth-token': localStorage.token }
     });
-    renderMarkdown(mdRawResult);
+    const mdResult = await mdData.json();
+    dispatch({
+      type: GET_MD_LIST,
+      payload: mdResult
+    });
   };
 
+  // @route     GET /markdown
+  // @desc      Get singe user file with :id from DB
+  // @access    Private
+
+  const getMdDocument = async id => {
+    setLoading();
+    const mdData = await fetch(`/markdown/${id}`, {
+      method: 'GET',
+      headers: { 'x-auth-token': localStorage.token }
+    });
+    const mdResult = await mdData.json();
+    dispatch({
+      type: GET_MD,
+      payload: mdResult
+    });
+    // renderMarkdown(mdResult.text);
+  };
+
+  // @route     POST /markdown
+  // @desc      Post user markdwon file to DB and return new file's id
+  // @access    Private
+
   const saveMarkdownServer = async rawMd => {
-    const postData = await fetch("/markdown", {
-      method: "POST",
+    const postData = await fetch('/markdown', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ mdData: rawMd })
     });
     setSaveStatus(postData.status);
   };
+
+  //TODO Post and delete
+  //  ...
+
+  // Client functions to manage markdown files
 
   const saveMarkdownState = rawMd => {
     setLoading();
@@ -69,7 +94,7 @@ const MdState = props => {
       payload: rawMd
     });
     setTimeoutIndex(rawMd);
-    setSaveStatus("saving");
+    setSaveStatus('saving');
     renderMarkdown(rawMd);
   };
 
@@ -105,13 +130,15 @@ const MdState = props => {
   return (
     <MdContext.Provider
       value={{
-        mdRendered: md.mdRendered,
+        mdList: md.mdList,
         mdRaw: md.mdRaw,
+        mdRendered: md.mdRendered,
         loading: md.loading,
-        getRawMarkdown,
-        saveMarkdownState,
         saveStatus: md.saveStatus,
-        timeoutIndex: md.timeoutIndex
+        timeoutIndex: md.timeoutIndex,
+        saveMarkdownState,
+        getMdList,
+        getMdDocument
       }}
     >
       {props.children}
