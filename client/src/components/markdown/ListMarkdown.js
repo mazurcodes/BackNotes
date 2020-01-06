@@ -12,6 +12,8 @@ const ListMarkdown = () => {
     // eslint-disable-next-line
   }, []);
 
+  console.log(mdList)
+
   const markdownFiles = mdList.map(file => <ListItem key={file._id} file={file}/>);
 
   if (loading) return <div>Loading...</div>;

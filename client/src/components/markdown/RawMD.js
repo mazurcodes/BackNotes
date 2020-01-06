@@ -6,10 +6,10 @@ const RawMD = () => {
   const { mdRaw, getRawMarkdown, saveMarkdownState, loading } = useContext(MdContext);
 
   // fetch raw markdown
-  useEffect(() => {
-    getRawMarkdown();
-    // eslint-disable-next-line
-  }, []);
+  // useEffect(() => {
+  //   getRawMarkdown();
+  //   // eslint-disable-next-line
+  // }, []);
 
   const saveMd = e => {
     saveMarkdownState(e.target.value);

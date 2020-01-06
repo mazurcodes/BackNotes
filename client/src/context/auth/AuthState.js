@@ -26,10 +26,16 @@ const AuthState = props => {
     'Content-Type': 'application/json'
   };
 
+  // generic function to handle errors from fetch api
+  const handleErrors = response => {
+    if (!response.ok) throw Error(response.statusText);
+  }
+
   const loadUser = async () => {
     try {
-      const userJson = await fetch('/auth', {method: "GET", headers: {'x-auth-token': localStorage.token}});
-      const user = await userJson.json();
+      const res = await fetch('/auth', {method: "GET", headers: {'x-auth-token': localStorage.token}});
+      handleErrors(res);
+      const user = await res.json();
       dispatch({
         type: USER_LOADED,
         payload: user
@@ -44,11 +50,10 @@ const AuthState = props => {
   };
 
   const register = async user => {
-    console.log("auth: ", user);
     try {
       const res = await fetch('/users', { method: "POST", headers, body: JSON.stringify(user) });
+      handleErrors(res);
       const token = await res.json()
-      console.log(token);
       dispatch({
         type: REGISTER_SUCCESS,
         payload: token
@@ -63,11 +68,10 @@ const AuthState = props => {
   };
 
   const login = async user => {
-    console.log("auth: ", user);
     try {
       const res = await fetch('/auth', { method: "POST", headers, body: JSON.stringify(user) });
+      handleErrors(res);
       const token = await res.json();
-      console.log(token);
       dispatch({
         type: LOGIN_SUCCESS,
         payload: token

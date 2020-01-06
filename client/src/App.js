@@ -6,6 +6,7 @@ import Navbar from './components/layout/Navbar';
 import Home from './components/pages/Home';
 import Register from './components/auth/Register';
 import Login from './components/auth/Login';
+import PrivateRoute from './components/routing/PrivateRoute';
 
 const mainAppStyle = {
   display: 'flex',
@@ -22,7 +23,7 @@ const App = () => {
           <div className="App" style={mainAppStyle}>
             <Navbar />
             <Switch>
-              <Route exact path="/" component={Home}  />
+              <PrivateRoute exact path="/" component={Home}  />
               <Route exact path="/register" component={Register}  />
               <Route exact path="/login" component={Login}  />
             </Switch>

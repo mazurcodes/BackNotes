@@ -16,7 +16,7 @@ router.get('/', auth, async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(400);
-    process.exit();
+    // process.exit();
   }
 });
 
@@ -38,7 +38,7 @@ router.get('/:id', auth, async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(400);
-    process.exit();
+    // process.exit();
   }
 });
 
@@ -59,7 +59,6 @@ router.post('/', auth, async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(400);
-    process.exit();
   }
 });
 
@@ -95,7 +94,7 @@ router.put('/:id', auth, async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(400);
-    process.exit();
+    // process.exit();
   }
 });
 
@@ -121,7 +120,7 @@ router.delete('/:id', auth, async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(400);
-    process.exit();
+    // process.exit();
   }
 });
 

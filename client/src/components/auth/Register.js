@@ -1,8 +1,8 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import AuthContext from '../../context/auth/AuthContext';
 
-const Register = () => {
-  const { register } = useContext(AuthContext);
+const Register = (props) => {
+  const { register, isAuthenticated } = useContext(AuthContext);
 
   const initialState = {
     name: '',
@@ -14,6 +14,12 @@ const Register = () => {
   const [user, setUser] = useState(initialState);
   const { name, email, password, password2 } = user;
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      props.history.push('/');
+    }
+  }, [isAuthenticated, props.history])
+
   const onChange = e => {
     setUser({
       ...user,
@@ -23,8 +29,8 @@ const Register = () => {
 
   const onSubmit = e => {
     e.preventDefault();
-    register(user);
-    console.log('register: ', user);
+    if (password === password2) return register(user);
+    alert("Passwords doesn't match")
   };
   return (
     <div className="form-container">

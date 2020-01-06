@@ -5,8 +5,10 @@ import {
   SET_TIMEOUT,
   SET_SAVE_STATUS,
   GET_MD_LIST,
-  GET_MD
-} from "../types";
+  GET_MD,
+  MD_ERROR,
+  CLEAR_MD
+} from '../types';
 
 export default (state, action) => {
   switch (action.type) {
@@ -19,9 +21,10 @@ export default (state, action) => {
     case GET_MD:
       return {
         ...state,
-        mdRaw: action.payload,
+        mdFile: action.payload,
+        mdRaw: action.payload.text,
         loading: false
-      }
+      };
     case RENDER_MD:
       return {
         ...state,
@@ -29,8 +32,13 @@ export default (state, action) => {
         loading: false
       };
     case SAVE_MD:
+      const newMdFile = {
+        ...state.mdFile,
+        text: action.payload
+      };
       return {
         ...state,
+        mdFile: newMdFile,
         mdRaw: action.payload,
         loading: false
       };
@@ -48,6 +56,23 @@ export default (state, action) => {
       return {
         ...state,
         loading: true
+      };
+    case CLEAR_MD:
+      return {
+        ...state,
+        mdList: [],
+        mdFile: null,
+        mdRaw: null,
+        mdRendered: null,
+        loading: false,
+        saveStatus: null,
+        timeoutIndex: 1,
+        errors: null
+      };
+    case MD_ERROR:
+      return {
+        ...state,
+        errors: action.payload
       };
 
     default:

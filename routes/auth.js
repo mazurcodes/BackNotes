@@ -10,10 +10,8 @@ const auth = require("../middleware/auth");
 // @access    Private
 
 router.get('/', auth, async (req, res) => {
-  console.log(req.user.id);
   try {
     const foundUser = await User.findById(req.user.id).select("-password");
-    console.log(foundUser);
     res.status(200).json(foundUser);
   
   } catch (err) {

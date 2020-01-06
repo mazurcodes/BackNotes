@@ -8,7 +8,9 @@ import {
   RENDER_MD,
   SAVE_MD,
   SET_TIMEOUT,
-  SET_SAVE_STATUS
+  SET_SAVE_STATUS,
+  MD_ERROR,
+  CLEAR_MD
 } from '../types';
 
 // Markdown-It module
@@ -23,14 +25,21 @@ mdIt.use(mdToc);
 const MdState = props => {
   const initialState = {
     mdList: [],
+    mdFile: null,
     mdRaw: null,
     mdRendered: null,
     loading: false,
     saveStatus: null,
-    timeoutIndex: 1
+    timeoutIndex: 1,
+    errors: null
   };
 
   const [md, dispatch] = useReducer(mdReducer, initialState);
+
+  // generic function to handle errors from fetch api
+  const handleErrors = response => {
+    if (!response.ok) throw Error(response.statusText);
+  }
 
   // @route     GET /markdown
   // @desc      Get list of all user files from DB
@@ -38,15 +47,24 @@ const MdState = props => {
 
   const getMdList = async () => {
     setLoading();
-    const mdData = await fetch('/markdown', {
-      method: 'GET',
-      headers: { 'x-auth-token': localStorage.token }
-    });
-    const mdResult = await mdData.json();
-    dispatch({
-      type: GET_MD_LIST,
-      payload: mdResult
-    });
+    try {
+      const mdData = await fetch('/markdown', {
+        method: 'GET',
+        headers: { 'x-auth-token': localStorage.token }
+      });
+      handleErrors(mdData);
+      const mdResult = await mdData.json();
+      dispatch({
+        type: GET_MD_LIST,
+        payload: mdResult
+      });
+    } catch (err) {
+      console.log(err);
+      dispatch({
+        type: MD_ERROR,
+        payload: err
+      })
+    }
   };
 
   // @route     GET /markdown
@@ -55,35 +73,59 @@ const MdState = props => {
 
   const getMdDocument = async id => {
     setLoading();
-    const mdData = await fetch(`/markdown/${id}`, {
-      method: 'GET',
-      headers: { 'x-auth-token': localStorage.token }
-    });
-    const mdResult = await mdData.json();
-    dispatch({
-      type: GET_MD,
-      payload: mdResult
-    });
-    // renderMarkdown(mdResult.text);
+    try {
+      const mdData = await fetch(`/markdown/${id}`, {
+        method: 'GET',
+        headers: { 'x-auth-token': localStorage.token }
+      });
+      handleErrors(mdData);
+      const mdResult = await mdData.json();
+      dispatch({
+        type: GET_MD,
+        payload: mdResult
+      });
+      renderMarkdown(mdResult.text);
+    } catch (err) {
+      console.log(err);
+      dispatch({
+        type: MD_ERROR,
+        payload: err
+      })
+    }
   };
 
-  // @route     POST /markdown
-  // @desc      Post user markdwon file to DB and return new file's id
+  // @route     PUT /markdown
+  // @desc      Put user markdwon file to DB
   // @access    Private
 
-  const saveMarkdownServer = async rawMd => {
-    const postData = await fetch('/markdown', {
-      method: 'POST',
+  const saveMarkdownServer = async mdFile => {
+    try {
+      const postData = await fetch(`/markdown/${mdFile._id}`, {
+      method: 'PUT',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-auth-token': localStorage.token
       },
-      body: JSON.stringify({ mdData: rawMd })
+      body: JSON.stringify(mdFile)
     });
+    handleErrors(postData);
     setSaveStatus(postData.status);
+    } catch (err) {
+      console.log(err);
+      dispatch({
+        type: MD_ERROR,
+        payload: err
+      })
+    }
+    
   };
 
   //TODO Post and delete
   //  ...
+
+  // @route     POST /markdown
+  // @desc      Post user markdwon file to DB and return new file's id
+  // @access    Private
 
   // Client functions to manage markdown files
 
@@ -109,8 +151,12 @@ const MdState = props => {
 
   const setTimeoutIndex = rawMd => {
     clearTimeout(md.timeoutIndex);
+    const newMdFile = {
+      ...md.mdFile,
+      text: rawMd
+    }
     const timeoutIndex = setTimeout(() => {
-      saveMarkdownServer(rawMd);
+      saveMarkdownServer(newMdFile);
     }, 3000);
     dispatch({
       type: SET_TIMEOUT,
@@ -125,6 +171,8 @@ const MdState = props => {
     });
   };
 
+  const clearMd = () => dispatch({type: CLEAR_MD})
+
   const setLoading = () => dispatch({ type: LOADING });
 
   return (
@@ -138,7 +186,8 @@ const MdState = props => {
         timeoutIndex: md.timeoutIndex,
         saveMarkdownState,
         getMdList,
-        getMdDocument
+        getMdDocument,
+        clearMd
       }}
     >
       {props.children}

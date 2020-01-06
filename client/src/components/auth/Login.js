@@ -1,8 +1,8 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import AuthContext from '../../context/auth/AuthContext';
 
-const Login = () => {
-  const { login } = useContext(AuthContext);
+const Login = (props) => {
+  const { login, isAuthenticated } = useContext(AuthContext);
 
   const initialState = {
     email: '',
@@ -11,6 +11,12 @@ const Login = () => {
 
   const [user, setUser] = useState(initialState);
   const { email, password } = user;
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      props.history.push('/');
+    }
+  }, [isAuthenticated, props.history])
 
   const onChange = e => {
     setUser({
@@ -22,7 +28,6 @@ const Login = () => {
   const onSubmit = e => {
     e.preventDefault();
     login(user);
-    console.log('login: ', user);
   };
   return (
     <div className="form-container">

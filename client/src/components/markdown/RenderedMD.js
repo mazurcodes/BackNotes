@@ -5,7 +5,7 @@ import MdContext from "../../context/md/MdContext";
 
 const RenderedMD = () => {
   //context
-  const { mdRendered, getMarkdown, loading } = useContext(MdContext);
+  const { mdRendered, loading } = useContext(MdContext);
 
   // fetch rendered markdown
   // useEffect(() => {
